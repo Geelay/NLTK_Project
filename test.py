@@ -1,3 +1,4 @@
+
 import nltk
 training_count = int(len(nltk.corpus.brown.tagged_sents(categories='news')) * 0.9)
 training_sents = nltk.corpus.brown.tagged_sents(categories='news')[:training_count]
