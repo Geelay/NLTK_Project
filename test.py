@@ -1,4 +1,5 @@
 import nltk
+from nltk.corpus import brown
 training_count = int(len(nltk.corpus.brown.tagged_sents(categories='news')) * 0.9)
 training_sents = nltk.corpus.brown.tagged_sents(categories='news')[:training_count]
 testing_sents = nltk.corpus.brown.tagged_sents(categories='news')[training_count+1:]
@@ -18,3 +19,11 @@ def findtags(tag_prefix, tagged_text):
 tagdict = findtags('VB', nltk.corpus.brown.tagged_words(categories='news'))
 for tag in sorted(tagdict):
     print(tag, tagdict[tag])
+    
+brown_news_tagged = brown.tagged_words(categories='news', tagset='universal')
+data = nltk.ConditionalFreqDist((word.lower(), tag)
+                                for (word, tag) in brown_news_tagged)
+for word in sorted(data.conditions()):
+    if len(data[word]) > 3:
+        tags = [tag for (tag, _) in data[word].most_common()]
+        print(word, ' '.join(tags))
