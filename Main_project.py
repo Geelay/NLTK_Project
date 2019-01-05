@@ -3,7 +3,6 @@ import nltk.tag, nltk.data
 from nltk.corpus import brown
 
 
-
 def evaluate(tagger, sentences):
     good,total = 0,0.
     for sentence,func in sentences:
@@ -44,10 +43,10 @@ class Text():
         NN = self.text.count((word, 'NN'))
         if NN != 0:
             print('word "' + word +'" as noun, common, singular or mass : ' + str(NN))  
-        RB = self.text.count((word, 'NN'))
+        RB = self.text.count((word, 'RB'))
         if RB != 0:
             print('word "' + word +'" as adverb : ' + str(RB)) 
-        JJ = self.text.count((word, 'NN'))
+        JJ = self.text.count((word, 'JJ'))
         if JJ != 0:
             print('word "' + word +'" as adjective or numeral, ordinal : ' + str(JJ))   
         CC = self.text.count((word, 'CC'))
@@ -152,11 +151,11 @@ class Text():
   
 def start():    
     print('Enter your text')            
-    letter = Text(str(input()))
+    letter = Text(str(input()).lower())
     letter.word_tagger()
     print(letter.text)
     print('Enter sought word')
-    letter.find_word(str(input()))
+    letter.find_word(str(input()).lower())
     
 if __name__ == "__main__":
     start()
