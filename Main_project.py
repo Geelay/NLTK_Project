@@ -1,6 +1,13 @@
 import nltk
+import random
 import nltk.tag, nltk.data
 from nltk.corpus import brown
+from ClassifierBasedGermanTagger.ClassifierBasedGermanTagger import ClassifierBasedGermanTagger
+corp = nltk.corpus.ConllCorpusReader('.', 'tiger_release_aug07.corrected.16012013.conll09',
+                                     ['ignore', 'words', 'ignore', 'ignore', 'pos'],
+                                     encoding='utf-8')
+tagged_sents = corp.tagged_sents()
+random.shuffle(tagged_sents)
 
 
 def evaluate(tagger, sentences):
@@ -9,18 +16,6 @@ def evaluate(tagger, sentences):
         tags = tagger.tag(nltk.word_tokenize(sentence))
         good += func(tags)
         total += 1
-
-sentences = [
-    ('select the files', lambda tags: ('select', 'VB') in tags),
-    ('use the select function on the sockets', lambda tags: ('select', 'JJ') in tags and ('use', 'VB') in tags),
-    ('the select was good', lambda tags: ('select', 'NN') in tags),
-]
-
-train_sents = [
-    [('select', 'VB'), ('the', 'DT'), ('files', 'NNS')],
-    [('use', 'VB'), ('the', 'DT'), ('select', 'JJ'), ('function', 'NN'), ('on', 'IN'), ('the', 'DT'), ('sockets', 'NNS')],
-    [('the', 'DT'), ('select', 'NN'), ('files', 'NNS')],
-]
 
 
 
@@ -148,10 +143,21 @@ class Text():
         AT = self.text.count((word, 'AT'))
         if AT != 0:
             print('word "' + word +'" as article : ' + str(AT))               
-  
+
+class Gertext(Text):
+    def __init__(self, text):
+        self.text = nltk.word_tokenize(text)
+        self.training_count = int(len(corp.tagged_sents()) * 0.9)
+        self.training_sents = corp.tagged_sents[:self.training_count]
+    def word_tagger(self):
+        tagger = ClassifierBasedGermanTagger(train=corp.training_sents)
+        self.text = tagger.tag(self.text)
+            
+
+
 def start():    
     print('Enter your text')            
-    letter = Text(str(input()).lower())
+    letter = Gertext(str(input()).lower())
     letter.word_tagger()
     print(letter.text)
     print('Enter sought word')
