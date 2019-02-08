@@ -2,7 +2,75 @@ import nltk
 import random
 import nltk.tag, nltk.data
 from nltk.corpus import brown
-from ClassifierBasedGermanTagger.ClassifierBasedGermanTagger import ClassifierBasedGermanTagger
+import re
+from nltk.tag.sequential import ClassifierBasedTagger
+
+class ClassifierBasedGermanTagger(ClassifierBasedTagger):
+    """A classifier based German part-of-speech tagger. It has an accuracy of
+    96.09% after being trained on 90% of the German TIGER corpus. The tagger
+    extends the NLTK ClassifierBasedTagger and implements a slightly modified
+    feature detector.
+    """
+
+    def feature_detector(self, tokens, index, history):
+        """Implementing a slightly modified feature detector.
+        @param tokens: The tokens from the sentence to tag.
+        @param index: The current token index to tag.
+        @param history: The previous tagged tokens.
+        """
+
+        word = tokens[index]
+        if index == 0: # At the beginning of the sentence
+            prevword = prevprevword = None
+            prevtag = prevprevtag = None
+            #word = word.lower() # Lowercase at the beginning of sentence
+        elif index == 1:
+            prevword = tokens[index-1] # Note: no lowercase
+            prevprevword = None
+            prevtag = history[index-1]
+            prevprevtag = None
+        else:
+            prevword = tokens[index-1]
+            prevprevword = tokens[index-2]
+            prevtag = history[index-1]
+            prevprevtag = history[index-2]
+
+        if re.match('[0-9]+([\.,][0-9]*)?|[0-9]*[\.,][0-9]+$', word):
+            # Included "," as decimal point
+            shape = 'number'
+        elif re.compile('\W+$', re.UNICODE).match(word):
+            # Included unicode flag
+            shape = 'punct'
+        elif re.match('([A-ZÄÖÜ]+[a-zäöüß]*-?)+$', word):
+            # Included dash for dashed words and umlauts
+            shape = 'upcase'
+        elif re.match('[a-zäöüß]+', word):
+            # Included umlauts
+            shape = 'downcase'
+        elif re.compile("\w+", re.UNICODE).match(word):
+            # Included unicode flag
+            shape = 'mixedcase'
+        else:
+            shape = 'other'
+
+        features = {
+            'prevtag': prevtag,
+            'prevprevtag': prevprevtag,
+            'word': word,
+            'word.lower': word.lower(),
+            'suffix3': word.lower()[-3:],
+            #'suffix2': word.lower()[-2:],
+            #'suffix1': word.lower()[-1:],
+            'preffix1': word[:1], # included
+            'prevprevword': prevprevword,
+            'prevword': prevword,
+            'prevtag+word': '%s+%s' % (prevtag, word),
+            'prevprevtag+word': '%s+%s' % (prevprevtag, word),
+            'prevword+word': '%s+%s' % (prevword, word),
+            'shape': shape
+            }
+        return features
+
 corp = nltk.corpus.ConllCorpusReader('.', 'tiger_release_aug07.corrected.16012013.conll09',
                                      ['ignore', 'words', 'ignore', 'ignore', 'pos'],
                                      encoding='utf-8')
@@ -30,6 +98,11 @@ class Text():
         unigram_tagger = nltk.UnigramTagger(self.training_sents, backoff=default_tagger)
         bigram_tagger = nltk.BigramTagger(self.training_sents, backoff=unigram_tagger)
         self.text = bigram_tagger.tag(self.text)
+        
+    def find_sentence(self, word):
+        #TODO: normal sentence
+        pass 
+    
         
     def find_word(self, word):
         IN = self.text.count((word, 'IN'))
@@ -150,18 +223,19 @@ class Gertext(Text):
         self.training_count = int(len(corp.tagged_sents()) * 0.9)
         self.training_sents = corp.tagged_sents[:self.training_count]
     def word_tagger(self):
-        tagger = ClassifierBasedGermanTagger(train=corp.training_sents)
+        tagger = ClassifierBasedGermanTagger(train=self.training_sents)
         self.text = tagger.tag(self.text)
-            
 
 
-def start():    
+
+def start():
     print('Enter your text')            
-    letter = Gertext(str(input()).lower())
+    letter = Text(str(input()).lower())
     letter.word_tagger()
     print(letter.text)
     print('Enter sought word')
     letter.find_word(str(input()).lower())
+    
     
 if __name__ == "__main__":
     start()

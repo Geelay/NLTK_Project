@@ -30,3 +30,5 @@ for word in sorted(data.conditions()):
     if len(data[word]) > 3:
         tags = [tag for (tag, _) in data[word].most_common()]
         print(word, ' '.join(tags))
+gutenberg_files = nltk.corpus.gutenberg.fileids()
+print(gutenberg_files)
